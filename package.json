@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Api service for Zeno-verify.",
   "main": "index.js",
+  "engines": {
+    "node": "18.10.0",
+    "npm": "8.19.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev-tsc": "tsc -w",
