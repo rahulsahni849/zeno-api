@@ -15,21 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const zkpSchema_1 = __importDefault(require("../db/models/zkpSchema"));
 const walletVerifier_1 = require("../services/walletVerifier");
-const mongoose_1 = require("mongoose");
+const responseModel_1 = require("../db/models/responseModel");
 const verfierRoute = (0, express_1.Router)();
 verfierRoute.post("/token", (req, resp) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!(0, walletVerifier_1.walletVerifier)(req.body["walletAddress"])) {
-            resp.send("Wallet address is not valid!");
-            return;
+            return resp.json((0, responseModel_1.ErrorGenerator)(400, "Bad request", "Wallet address is not valid"));
         }
         let prevToken = yield zkpSchema_1.default.findOne({ walletAddress: req.body["walletAddress"] });
         console.log(prevToken);
         let token;
         if (prevToken != null) {
             if (prevToken.expiryDate.getTime() >= new Date().getTime()) {
-                resp.send(prevToken);
-                return;
+                return resp.json((0, responseModel_1.ResultGenerator)(200, prevToken, "Token already exists"));
             }
             else {
                 console.log("deleting time");
@@ -45,26 +43,15 @@ verfierRoute.post("/token", (req, resp) => __awaiter(void 0, void 0, void 0, fun
         });
         let chains = Array.from(req.body["chains"]);
         token.chains = chains;
-        // console.log(token)
-        token.save().then((value) => {
+        return token.save().then((value) => {
             console.log(value);
-            resp.json({
-                data: value,
-                statusCode: 201
-            });
+            resp.json((0, responseModel_1.ResultGenerator)(201, value, "Token Successfully saved"));
         }).catch((err) => {
-            resp.json({
-                message: err.message,
-                errorStack: err.stack,
-                statusCode: 500
-            });
+            return resp.json((0, responseModel_1.ErrorGenerator)(500, err, "Error while saving the document"));
         });
     }
     catch (e) {
-        resp.send(500).json({
-            error: e,
-            status: 500
-        });
+        return resp.json((0, responseModel_1.ErrorGenerator)(500, e, "Exception occurs"));
     }
 }));
 verfierRoute.get("/token/:walletAddress", (req, resp) => __awaiter(void 0, void 0, void 0, function* () {
@@ -72,38 +59,22 @@ verfierRoute.get("/token/:walletAddress", (req, resp) => __awaiter(void 0, void 
     try {
         let wallet = (_a = req.params["walletAddress"]) === null || _a === void 0 ? void 0 : _a.toString();
         if (wallet == null) {
-            resp.send("bad request");
-            return;
+            return resp.json((0, responseModel_1.ErrorGenerator)(400, "Bad request", "WalletAddress is not specified"));
         }
-        // console.log(wallet)   
         if (!(0, walletVerifier_1.walletVerifier)(wallet)) {
-            resp.send("Wallet address is not valid!");
-            return;
+            return resp.json((0, responseModel_1.ErrorGenerator)(400, "Bad request", "Wallet address is not valid"));
         }
         let token = yield zkpSchema_1.default.findOne({ walletAddress: wallet });
-        // console.log(token)
         if (token == null) {
-            return;
+            return resp.json((0, responseModel_1.ErrorGenerator)(404, "Not found", "Token does not exists"));
         }
         if (token.expiryDate.getTime() >= new Date().getTime()) {
-            resp.send(token);
-            return;
+            return resp.json((0, responseModel_1.ResultGenerator)(200, token, "Token found"));
         }
-        // console.log(token)
-        resp.send("No token exists!");
-        // let etherBalance = await getEtherBalance(wallet)
-        // let chainid =await getChainIds(wallet)
-        // resp.send(`
-        //     Ether balance: ${etherBalance}
-        //     chainId: ${chainid}
-        // `)
+        return resp.json((0, responseModel_1.ErrorGenerator)(404, "Not found", "Either token doesn't exists or it got expire"));
     }
     catch (error) {
-        let message = {
-            error: mongoose_1.Error.Messages,
-            status: 500
-        };
-        resp.json(message);
+        return resp.json((0, responseModel_1.ErrorGenerator)(500, error, "Exception occurs"));
     }
 }));
 exports.default = verfierRoute;

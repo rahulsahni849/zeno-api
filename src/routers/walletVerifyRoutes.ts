@@ -2,7 +2,8 @@ import {Request, Response, Router} from 'express';
 import zkpModel from '../db/models/zkpSchema';
 import { walletVerifier } from '../services/walletVerifier';
 import { chain, IToken } from '../db/models/zkpSchema';
-import { Error, Mongoose, MongooseError } from 'mongoose';
+import { Error, MongooseError } from 'mongoose';
+import { ErrorGenerator,ResultGenerator } from '../db/models/responseModel';
 
 
 const verfierRoute:Router = Router()
@@ -11,8 +12,7 @@ verfierRoute.post("/token",async (req:Request,resp:Response) =>{
     try{
 
         if(!walletVerifier(req.body["walletAddress"])){
-            resp.send("Wallet address is not valid!")
-            return;
+            return resp.json(ErrorGenerator(400,"Bad request","Wallet address is not valid"));
         }
 
         let prevToken:IToken | null = await zkpModel.findOne({walletAddress:req.body["walletAddress"]})
@@ -20,10 +20,8 @@ verfierRoute.post("/token",async (req:Request,resp:Response) =>{
         let token;
         if(prevToken!=null){
             if(prevToken.expiryDate.getTime() >= new Date().getTime()){
-                resp.send(prevToken)
-                return ;
+                return resp.json(ResultGenerator(200,prevToken,"Token already exists"))
             }else{
-
                 console.log("deleting time")
                 await zkpModel.deleteOne(prevToken)
             }
@@ -37,30 +35,17 @@ verfierRoute.post("/token",async (req:Request,resp:Response) =>{
         })
         let chains:chain[] = Array.from(req.body["chains"])
         token.chains=chains
-        // console.log(token)
-        
-        token.save().then((value)=>{
-            console.log(value)
-            resp.json({
-                data:value,
-                statusCode:201
-            })
-        }).catch((err:MongooseError)=>{
-            resp.json({
-                message:err.message,
-                errorStack:err.stack,
-                statusCode:500
 
-            })
+        return token.save().then((value)=>{
+            console.log(value)
+            resp.json(ResultGenerator(201,value,"Token Successfully saved"))
+        }).catch((err:MongooseError)=>{
+            return resp.json(ErrorGenerator(500,err,"Error while saving the document"))
         })
-    
+
     }
     catch(e){
-        resp.send(500).json({
-            error:e,
-            status:500
-            
-        })
+        return resp.json(ErrorGenerator(500,e,"Exception occurs"))
     }
 
 })
@@ -71,49 +56,26 @@ verfierRoute.get("/token/:walletAddress",async (req:Request,resp:Response) =>{
     try{
         let wallet:string|undefined= req.params["walletAddress"]?.toString()
         if(wallet==null){
-            resp.send("bad request")
-            return;
-        }
-        // console.log(wallet)   
+            return resp.json(ErrorGenerator(400,"Bad request","WalletAddress is not specified"));
+        } 
         if(!walletVerifier(wallet)){
-            resp.send("Wallet address is not valid!")
-            return;
+            return resp.json(ErrorGenerator(400,"Bad request","Wallet address is not valid"));
         }
 
         let token:IToken | null = await zkpModel.findOne({walletAddress:wallet})
-        // console.log(token)
         if(token==null){
-            return ;
+            return resp.json(ErrorGenerator(404,"Not found","Token does not exists"));
         }
         if(token.expiryDate.getTime() >= new Date().getTime()){
-            resp.send(token)
-            return;
+            return resp.json(ResultGenerator(200,token,"Token found"))
         }
-        // console.log(token)
-        resp.send("No token exists!")
-
-        // let etherBalance = await getEtherBalance(wallet)
-        // let chainid =await getChainIds(wallet)
-          
-        // resp.send(`
-        //     Ether balance: ${etherBalance}
-        //     chainId: ${chainid}
-        // `)
+        return resp.json(ErrorGenerator(404,"Not found","Either token doesn't exists or it got expire"));
     }
     catch(error){
-        let message:{
-            error:Error,
-            status:number
-        }={
-            error:Error.Messages,
-            status:500
-        }
-        resp.json(message)
+        return resp.json(ErrorGenerator(500,error,"Exception occurs"))
     }
     
 })
-
-
 
 export default verfierRoute
 

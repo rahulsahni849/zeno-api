@@ -10,7 +10,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev-tsc": "tsc -w",
-    "dev": "tsc && nodemon build/index.js",
+    "dev": "nodemon build/index.js",
     "start": "node build/index.js",
     "prod": "cd build && node index.js"
   },
@@ -28,7 +28,6 @@
     "dotenv": "^16.0.3",
     "ethers": "^6.0.3",
     "express": "^4.18.2",
-    "mongodb": "^5.0.1",
     "mongoose": "^6.9.1",
     "web3": "^1.8.2",
     "web3-eth": "^1.8.2"

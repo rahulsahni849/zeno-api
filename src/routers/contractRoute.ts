@@ -1,7 +1,8 @@
 import {Request, Response, Router} from 'express';
 import contractChainModel from '../db/models/chainContractSchema';
 import { IToken } from '../db/models/zkpSchema';
-import { Error, MongooseError } from 'mongoose';
+import { MongooseError } from 'mongoose';
+import { ResultGenerator, ErrorGenerator } from '../db/models/responseModel';
 
 const ContractRoute:Router = Router()
 
@@ -9,87 +10,59 @@ ContractRoute.post("/contract",async (req:Request,resp:Response) =>{
     try{
 
         let chainId = req.body["chainId"]
-
         let chain = await contractChainModel.findOne({chainId:chainId})
-        console.log(chain)
+        
         if(chain!=null){
             let contracts:string[]=req.body["contractAddress"]
-            if(contracts.length>0){
-                let allContracts = new Set([...contracts,...chain.contractAddress])
+            let intersectionContracts = contracts.filter((address)=> !chain?.contractAddress.includes(address))
+            
+            if(intersectionContracts.length>0){
+                let allContracts = new Set([...intersectionContracts,...chain.contractAddress])
                 chain.contractAddress=[...allContracts]
                 chain.save()
-                return resp.json(chain)
-
+                return resp.json(ResultGenerator(200,chain,"Contract addresses added"))
             }
-           return resp.json({
-            data:chain,
-            message:"chain already exists!"
-           })
+           return resp.json(ResultGenerator(200,chain,"Chain already exists"))
            
         }
         let newChain;
-        console.log("generation")
+
         newChain = new contractChainModel({
             chainId:req.body["chainId"],
             contractAddress:req.body["contractAddress"]
         })        
-        newChain.save().then((value)=>{
-            console.log(value)
-            resp.json({
-                data:value,
-                statusCode:201
-            })
+        return newChain.save().then((value)=>{
+
+            return resp.json(ResultGenerator(201,value,"Chain Successfully saved"))
         }).catch((err:MongooseError)=>{
-            resp.json({
-                message:err.message,
-                errorStack:err.stack,
-                statusCode:500
-            })
+            return resp.json(ErrorGenerator(500,err,"Error while saving the document"))
         })
-    
     }
-    catch(e){
-        resp.send(500).json({
-            error:e,
-            status:500
-            
-        })
+    catch(err){
+        return resp.send(500).json(ErrorGenerator(500,err,"Exception occurs"))
     }
 })
 
 
 ContractRoute.get("/contract/:chainId",async (req:Request,resp:Response) =>{
     try{
-
         let chainId:string = req.params["chainId"]?.toString()
         if(chainId==null){
-            resp.send("bad request")
-            return;
+            return resp.json(ErrorGenerator(400,"Bad request","Chain Id parameter is null"))
         }
          
         let chain:IToken | null = await contractChainModel.findOne({chainId:chainId})
-        console.log(chain)
+        
         if(chain==null){
-            return resp.send("Chain Id doesn't exists!")
+            return resp.json(ErrorGenerator(404,"Not found","Chain doesn't exists"))
         }
-        
-        resp.json(chain)
-        
+        return resp.json(ResultGenerator(200,chain,"Chain found"))
     }
     catch(error){
-        let message:{
-            error:Error,
-            status:number
-        }={
-            error:Error.Messages,
-            status:500
-        }
-        resp.json(message)
+        return resp.json(ErrorGenerator(500,error,"Exception occurs"))
     }
     
 })
-
-
 
 export default ContractRoute
 

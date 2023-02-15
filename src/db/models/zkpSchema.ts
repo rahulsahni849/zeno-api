@@ -1,5 +1,7 @@
-import mongoose, { ConnectOptions } from 'mongoose'
-import { Mongoose } from 'mongoose';
+import mongoose from 'mongoose'
+import dotenv from "dotenv";
+import path = require("path");
+dotenv.config({ path: path.resolve(__dirname + "/../../.env") });
 
 
 export interface chain{
@@ -23,11 +25,8 @@ export interface IToken {
     }
     chains:chain[],
     createdOn:Date,
-    expiryDate:Date,
-    closeOfferAt:Date
+    expiryDate:Date
 }
-
-
 
 const zkpSchema = new mongoose.Schema<IToken>({
     walletAddress:{
@@ -35,8 +34,7 @@ const zkpSchema = new mongoose.Schema<IToken>({
         length:64
     },
     tokenClaim:{
-        type:String,
-        expireAfterSeconds:20
+        type:String
     },
     createdOn:{
         type:Date,
@@ -48,7 +46,10 @@ const zkpSchema = new mongoose.Schema<IToken>({
         immutable:true,
         default:()=>{
             let date = new Date()
-            date.setSeconds(date.getSeconds()+ 60)
+            if(process.env["EXP_DAY"]==null){
+                return date.setSeconds(date.getSeconds()+ 20)
+            }
+            date.setSeconds(date.getSeconds()+ parseInt(process.env["EXP_DAY"]))
             return date
         }
     },

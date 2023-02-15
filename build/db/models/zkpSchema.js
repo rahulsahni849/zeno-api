@@ -4,14 +4,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const path = require("path");
+dotenv_1.default.config({ path: path.resolve(__dirname + "/../../.env") });
 const zkpSchema = new mongoose_1.default.Schema({
     walletAddress: {
         type: String,
         length: 64
     },
     tokenClaim: {
-        type: String,
-        expireAfterSeconds: 20
+        type: String
     },
     createdOn: {
         type: Date,
@@ -23,7 +25,10 @@ const zkpSchema = new mongoose_1.default.Schema({
         immutable: true,
         default: () => {
             let date = new Date();
-            date.setSeconds(date.getSeconds() + 60);
+            if (process.env["EXP_DAY"] == null) {
+                return date.setSeconds(date.getSeconds() + 20);
+            }
+            date.setSeconds(date.getSeconds() + parseInt(process.env["EXP_DAY"]));
             return date;
         }
     },

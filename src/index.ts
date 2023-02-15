@@ -29,7 +29,7 @@ mongoose.connect(
       if (err) {
         throw err;
       }
-      console.log("db got connected!");
+      console.log(`connected to DB: ${db_url}`);
     } catch (e) {
       console.log("error", e);
     }
@@ -43,7 +43,7 @@ app.use("/api/v1/zkp/", authHeaderMiddleware, verfierRoute);
 app.use("/api/v1/zkp/", authHeaderMiddleware, ContractRoute);
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Home Route");
+  res.send("<h1>This is home endpoint</h1>");
 });
 
 app.listen(port, () => {

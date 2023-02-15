@@ -25,7 +25,7 @@ mongoose_1.default.connect(db_url, {
         if (err) {
             throw err;
         }
-        console.log("db got connected!");
+        console.log(`connected to DB: ${db_url}`);
     }
     catch (e) {
         console.log("error", e);
@@ -36,7 +36,7 @@ app.use(express_1.default.urlencoded({ extended: true }));
 app.use("/api/v1/zkp/", AuthHeaderVerifierMiddleware_1.default, walletVerifyRoutes_1.default);
 app.use("/api/v1/zkp/", AuthHeaderVerifierMiddleware_1.default, contractRoute_1.default);
 app.get("/", (req, res) => {
-    res.send("Home Route");
+    res.send("<h1>This is home endpoint</h1>");
 });
 app.listen(port, () => {
     console.log(`server is listening on ${port}`);
