@@ -1,47 +1,51 @@
-import  express, { Application, Request, Response, Router } from 'express';
-import verfierRoute from './routers/walletVerifyRoutes';
-import dotenv from 'dotenv';
-import mongoose, { ConnectOptions } from 'mongoose'
-import path = require('path');
-import authHeaderMiddleware from './middlewares/AuthHeaderVerifierMiddleware';
-import ContractRoute from './routers/contractRoute';
+import express, { Application, Request, Response, Router } from "express";
+import verfierRoute from "./routers/walletVerifyRoutes";
+import dotenv from "dotenv";
+import mongoose, { ConnectOptions } from "mongoose";
+import path = require("path");
+import authHeaderMiddleware from "./middlewares/AuthHeaderVerifierMiddleware";
+import ContractRoute from "./routers/contractRoute";
 
-dotenv.config({ path:path.resolve(__dirname+'/../.env')})
+dotenv.config({ path: path.resolve(__dirname + "/../.env") });
 
+const app: Application = express();
 
-const app:Application = express()
-const port:number|string = process.env["PORT"]||5000
-let db_url:any = process.env["ISDEVELOPMENT"]?process.env["DEV_DB_URL"]:process.env["PROD_DB_URL"]
-console.log(db_url)
+const port: number | string = process.env["PORT"] || 5000;
+const db_url: any =
+  process.env.ISDEVELOPMENT === "true"
+    ? process.env.DEV_DB_URL
+    : process.env.PROD_DB_URL;
 
-mongoose.set('strictQuery', false);
+mongoose.set("strictQuery", false);
 
-mongoose.connect(db_url,
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-      } as ConnectOptions
-      ,(err)=>{
-        try{
-            if(err){
-              throw err
-            }
-          console.log("db got connected!")
-        }catch(e){
-          console.log("error",e)
-    }}
+mongoose.connect(
+  db_url,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  } as ConnectOptions,
+  (err) => {
+    try {
+      if (err) {
+        throw err;
+      }
+      console.log("db got connected!");
+    } catch (e) {
+      console.log("error", e);
+    }
+  }
 );
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/v1/zkp/",authHeaderMiddleware,verfierRoute);
-app.use("/api/v1/zkp/", authHeaderMiddleware,ContractRoute);
+app.use("/api/v1/zkp/", authHeaderMiddleware, verfierRoute);
+app.use("/api/v1/zkp/", authHeaderMiddleware, ContractRoute);
 
-app.get('/', (req:Request, res:Response) => {
-  res.send('Home Route')
-})
+app.get("/", (req: Request, res: Response) => {
+  res.send("Home Route");
+});
 
-app.listen(port,()=>{
-    console.log(`server is listening on ${port}`)
-})
+app.listen(port, () => {
+  console.log(`server is listening on ${port}`);
+});

@@ -10,8 +10,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev-tsc": "tsc -w",
-    "dev-server": "nodemon build/index.js",
-    "start": "node build/index.js"
+    "dev": "tsc && nodemon build/index.js",
+    "start": "node build/index.js",
+    "prod": "cd build && node index.js"
   },
   "repository": {
     "type": "git",
