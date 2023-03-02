@@ -1,4 +1,4 @@
-import { IToken } from "interfaces/token";
+import { IToken } from "../interfaces/token";
 import mongoose from "mongoose";
 
 const zkpSchema = new mongoose.Schema<IToken>({

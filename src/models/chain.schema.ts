@@ -1,4 +1,4 @@
-import { IChain } from "interfaces/token";
+import { IChain } from "../interfaces/token";
 import mongoose from "mongoose";
 
 const chainSchema = new mongoose.Schema<IChain>({
