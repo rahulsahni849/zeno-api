@@ -1,10 +1,12 @@
 import express, { Application, Request, Response, Router } from "express";
-import verfierRoute from "./routers/walletVerifyRoutes";
-import dotenv from "dotenv";
 import mongoose, { ConnectOptions } from "mongoose";
-import path = require("path");
+import dotenv from "dotenv";
+import path from "path";
+
 import authHeaderMiddleware from "./middlewares/AuthHeaderVerifierMiddleware";
-import ContractRoute from "./routers/contractRoute";
+import Routes from "./routes";
+
+const { ContractRoute, WalletVerfierRoute } = Routes;
 
 dotenv.config({ path: path.resolve(__dirname + "/../.env") });
 
@@ -39,7 +41,7 @@ mongoose.connect(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/v1/zkp/", authHeaderMiddleware, verfierRoute);
+app.use("/api/v1/zkp/", authHeaderMiddleware, WalletVerfierRoute);
 app.use("/api/v1/zkp/", authHeaderMiddleware, ContractRoute);
 
 app.get("/", (req: Request, res: Response) => {
