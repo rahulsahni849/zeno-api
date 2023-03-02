@@ -9,9 +9,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev-tsc": "tsc -w",
-    "dev": "nodemon build/index.js",
-    "start": "node build/index.js",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "start": "tsc && node build/index.js",
     "prod": "cd build && node index.js"
   },
   "repository": {
@@ -37,6 +36,8 @@
     "@types/mongodb": "^4.0.7",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^18.13.0",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1",
     "tslint": "^6.1.3",
     "typescript": "^4.9.5"
   }
