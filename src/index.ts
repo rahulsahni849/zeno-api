@@ -6,13 +6,13 @@ import path from "path";
 import authHeaderMiddleware from "./middlewares/AuthHeaderVerifierMiddleware";
 import Routes from "./routes";
 
-const { ContractRoute, WalletVerfierRoute } = Routes;
+const { ContractRoute, WalletVerfierRoute, PolygonIDRoute } = Routes;
 
 dotenv.config({ path: path.resolve(__dirname + "/../.env") });
 
 const app: Application = express();
 
-const port: number | string = process.env["PORT"] || 5000;
+const port: number | string = process.env["PORT"] || 3000;
 const db_url: any =
   process.env.ISDEVELOPMENT === "true"
     ? process.env.DEV_DB_URL
@@ -41,6 +41,7 @@ mongoose.connect(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/api", authHeaderMiddleware, PolygonIDRoute);
 app.use("/api/v1/zkp/", authHeaderMiddleware, WalletVerfierRoute);
 app.use("/api/v1/zkp/", authHeaderMiddleware, ContractRoute);
 
